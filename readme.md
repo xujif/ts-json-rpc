@@ -1,32 +1,32 @@
-## json rpc lib 
 
 ### Client with http Trasport
 ```typescript
 import { createHttpRpcClient } from 'json-rpc2.0-node'
-const client = createHttpRpcClient('http://endpoint',{Authorization:"token or other headers"})
+const client = createHttpRpcClient('http://endpoint',{Authorization:"token or other headers, or other http header"})
 const res = await client.invoke('method','param1','param2')
 client.notify('method','param1','param2')
+
 // or cast to an interface
-// const t:T = client.as<T>()
-// t.xxx()
+const t:T = client.as<T>()
+t.method('param1','param2')
 
 ```
 
 
-### Client with self Trasport
+### Client with custom Trasport
 ```typescript
-import { Client,Trasport } from 'json-rpc2.0-node'
-class MyTransport implements Trasport{
-    invoke (body: JsonRpcRequest): Promise<JsonRpcResponse> {
-        // send body
-    }
+// implement the transport interface
+// export interface Transport {
+//     (payload: string): Promise<string | undefined>
+// }
 
-    notify (body: JsonRpcNotify): void {
-       // send body
-    }
+import { Client,Trasport } from 'json-rpc2.0-node'
+
+function Mytransport(json:string){
+    return Promise.resolve(/*json respose*/)
 }
-const transport = new MyTransport()
-const client = new Client(transport)
+
+const client = new Client(Mytransport)
 
 ```
 
@@ -45,7 +45,7 @@ const jsonbody = `
 }
 `
 const jsonrpcResponse = await server.handle(jsonbody)
-// send your response back to client
+// send your response back to client 
 
 ```
 
