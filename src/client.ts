@@ -43,7 +43,7 @@ export class Client implements RpcClient {
         }
         let jsonResponse: string | undefined
         try {
-            jsonResponse = await this.transport(JSON.stringify(payload))
+            jsonResponse = await this.transport.invoke(JSON.stringify(payload))
         } catch (e) {
             throw new TransportError(e)
         }
@@ -71,11 +71,11 @@ export class Client implements RpcClient {
      * @memberof Client
      */
     notify (method: string, ...params: any[]) {
-        this.transport(JSON.stringify({
+        this.transport.notify(JSON.stringify({
             method,
             params,
             jsonrpc: '2.0'
-        })).catch(e => {/* ignore error*/ })
+        }))
     }
     /**
      * batch call
@@ -104,7 +104,7 @@ export class Client implements RpcClient {
                 return this
             },
             execute: async function () {
-                const res = await client.transport(JSON.stringify(payloads))
+                const res = await client.transport.invoke(JSON.stringify(payloads))
                 if (!res) {
                     return []
                 } else {
@@ -114,7 +114,7 @@ export class Client implements RpcClient {
         }
     }
 
-    as<T>(namespace?: string) {
+    as<T> (namespace?: string) {
         return new Proxy({}, {
             get: (target: any, method: string) => {
                 return (...args: any[]) => {

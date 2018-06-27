@@ -74,12 +74,13 @@ export class TransportError extends Error {
 }
 
 export interface Transport {
-    (payload: string): Promise<string | undefined>
+    invoke (payload: string): Promise<string>
+    notify (payload: string): void
 }
 export interface RpcClient {
     invoke (method: string, ...params: any[]): Promise<any>
     notify (method: string, ...params: any[]): void
-    as<T>(): T
+    as<T> (): T
 }
 
 export interface RpcServer {

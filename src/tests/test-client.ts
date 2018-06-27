@@ -5,10 +5,16 @@ import assert from 'assert';
 import { Client, Server } from '..';
 import { RpcServer, Transport } from '../types';
 
-function createPlainTransport (server: RpcServer): Transport {
-    return async (body: string) => {
-        const ret = await server.handle(body)
+class PlainTransport implements Transport {
+    constructor(protected server: RpcServer) {
+
+    }
+    async invoke (body: string) {
+        const ret = await this.server.handle(body)
         return JSON.stringify(ret)
+    }
+    notify (body: string) {
+        this.server.handle(body).catch(console.log)
     }
 }
 
@@ -16,7 +22,7 @@ describe('rpc:client:test', () => {
     const server = new Server()
     server.expose('hello', (m: string) => 'hello world ' + m)
     server.expose('triggerError', () => { throw new Error('e') })
-    const transport = createPlainTransport(server)
+    const transport = new PlainTransport(server)
     const client = new Client(transport)
     it('test invoke', async () => {
         const ret = await client.invoke('hello', 'mike')
