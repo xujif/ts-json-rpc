@@ -43,7 +43,7 @@ export class Client implements RpcClient {
         }
         let jsonResponse: string | undefined
         try {
-            jsonResponse = await this.transport.invoke(JSON.stringify(payload))
+            jsonResponse = await this.transport.invoke(payload)
         } catch (e) {
             throw new TransportError(e)
         }
@@ -71,11 +71,11 @@ export class Client implements RpcClient {
      * @memberof Client
      */
     notify (method: string, ...params: any[]) {
-        this.transport.notify(JSON.stringify({
+        this.transport.notify({
             method,
             params,
             jsonrpc: '2.0'
-        }))
+        })
     }
     /**
      * batch call
@@ -104,7 +104,7 @@ export class Client implements RpcClient {
                 return this
             },
             execute: async function () {
-                const res = await client.transport.invoke(JSON.stringify(payloads))
+                const res = await client.transport.invoke(payloads)
                 if (!res) {
                     return []
                 } else {

@@ -19,17 +19,13 @@ export interface JsonRpcRequest {
 }
 
 export interface JsonRpcNotify {
+    id?: null | undefined
     method: string
     params?: any[]
     jsonrpc: '2.0'
 }
 
-export interface JsonRpcMixedBody {
-    method: string
-    params?: any[]
-    jsonrpc: '2.0'
-    id?: number | null | string
-}
+export type JsonRpcMixedBody = JsonRpcRequest | JsonRpcNotify
 
 export class RemoteError extends Error {
     constructor(readonly message: string = 'internal error', readonly code: number = -32603, readonly data?: any) {
@@ -74,8 +70,8 @@ export class TransportError extends Error {
 }
 
 export interface Transport {
-    invoke (payload: string): Promise<string>
-    notify (payload: string): void
+    invoke (payload: JsonRpcRequest | JsonRpcMixedBody[]): Promise<string>
+    notify (payload: JsonRpcNotify | JsonRpcNotify[]): void
 }
 export interface RpcClient {
     invoke (method: string, ...params: any[]): Promise<any>
@@ -85,8 +81,8 @@ export interface RpcClient {
 
 export interface RpcServer {
     on (event: 'exception', handle: (body: any, e: any) => void): void
-    handle (payload: JsonRpcRequest): Promise<JsonRpcResponse>
-    handle (payload: JsonRpcNotify): Promise<undefined>
+    handle (payload: JsonRpcRequest | JsonRpcNotify[]): Promise<JsonRpcResponse>
+    handle (payload: JsonRpcNotify | JsonRpcNotify[]): Promise<undefined>
     handle (payload: JsonRpcMixedBody[]): Promise<JsonRpcResponse[] | undefined>
     handle (payload: string): Promise<JsonRpcResponse[] | JsonRpcResponse | undefined>
     expose (method: string, func: Function): void

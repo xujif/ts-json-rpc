@@ -3,17 +3,17 @@ import 'mocha';
 import assert from 'assert';
 
 import { Client, Server } from '..';
-import { RpcServer, Transport } from '../types';
+import { JsonRpcNotify, JsonRpcRequest, RpcServer, Transport } from '../types';
 
 class PlainTransport implements Transport {
     constructor(protected server: RpcServer) {
 
     }
-    async invoke (body: string) {
+    async invoke (body: JsonRpcRequest | JsonRpcNotify[]) {
         const ret = await this.server.handle(body)
         return JSON.stringify(ret)
     }
-    notify (body: string) {
+    notify (body: JsonRpcNotify | JsonRpcNotify[]): void {
         this.server.handle(body).catch(console.log)
     }
 }

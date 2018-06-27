@@ -1,7 +1,7 @@
 import axios, { AxiosProxyConfig } from 'axios';
 
 import { Client } from '../client';
-import { Transport } from '../types';
+import { JsonRpcMixedBody, JsonRpcNotify, JsonRpcRequest, Transport } from '../types';
 
 const pkg = require('../../package.json')
 
@@ -13,16 +13,16 @@ export class HttpTransport implements Transport {
             'User-Agent': `${pkg.name}/${pkg.version}`
         }, this.headers)
     }
-    async  invoke (payload: string): Promise<string> {
-        const res = await axios.post(this.endpoint, {
+    async  invoke (payload: JsonRpcRequest | JsonRpcMixedBody[]): Promise<string> {
+        const res = await axios.post(this.endpoint, payload, {
             proxy: this.proxy,
             headers: this.headers,
             responseType: 'arraybuffer'
         })
         return res.data.toString() as string
     }
-    notify (payload: string): void {
-        axios.post(this.endpoint, {
+    notify (payload: JsonRpcNotify | JsonRpcNotify[]): void {
+        axios.post(this.endpoint, payload, {
             proxy: this.proxy,
             headers: this.headers,
             responseType: 'arraybuffer'
