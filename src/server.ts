@@ -1,27 +1,13 @@
-import {
-    JsonRpcMixedBody,
-    JsonRpcNotify,
-    JsonRpcRequest,
-    JsonRpcResponse,
-    ParseError,
-    RemoteError,
-    RpcServer,
-} from './types';
+import { JsonRpcMixedBody, JsonRpcNotify, JsonRpcRequest, JsonRpcResponse, ParseError, RemoteError } from './types';
 
-
-/**
- * RpcServer
- * 
- * @export
- * @class Server
- * @extends {EventEmitter}
- * @implements {RpcServer}
- */
-export class Server implements RpcServer {
-
-    protected methods: { [method: string]: Function } = {}
+export class ServerProxy {
 
     protected exceptionHandle?: (body: any, e: any) => void
+    protected instance: any
+
+    constructor(instance: any) {
+        this.instance = instance
+    }
 
     on (event: 'exception', handle: (body: any, e: any) => void): void {
         this.exceptionHandle = handle
@@ -49,20 +35,19 @@ export class Server implements RpcServer {
             if (!payload.method) {
                 throw new ParseError('Invalid Request', -32600)
             }
-            if (!this.methods[payload.method]) {
+            if (typeof this.instance[payload.method] !== 'function') {
                 throw new ParseError('no method', -32601)
             }
         } catch (e) {
             return this.parseError(e)
         }
         try {
-            const func = this.methods[payload.method]
             const params = payload.params || []
             let ret: any
             if (Array.isArray(params)) {
-                ret = await func(...params)
+                ret = await this.instance[payload.method](...params)
             } else {
-                ret = await func(params)
+                ret = await this.instance[payload.method](params)
             }
             if ((payload as JsonRpcRequest).id !== void 0) {
                 return {
@@ -90,17 +75,6 @@ export class Server implements RpcServer {
         return vaildResults.length > 0 ? vaildResults : undefined
     }
 
-    /**
-     * 暴露一个方法
-     * 
-     * @param {string} method 
-     * @param {Function} func 
-     * @memberof Server
-     */
-    expose (method: string, func: Function) {
-        this.methods[method] = func
-    }
-
     protected parseError (e: ParseError) {
         return {
             'id': null,
@@ -121,5 +95,31 @@ export class Server implements RpcServer {
                 'message': e instanceof RemoteError ? e.message : 'internal error'
             }
         }
+    }
+
+
+}
+/**
+ * RpcServer
+ * 
+ * @export
+ * @class Server
+ * @extends {EventEmitter}
+ * @implements {RpcServer}
+ */
+export class Server extends ServerProxy {
+    constructor() {
+        super({})
+    }
+
+    /**
+     * 暴露一个方法
+     * 
+     * @param {string} method 
+     * @param {Function} func 
+     * @memberof Server
+     */
+    expose (method: string, func: Function) {
+        this.instance[method] = func
     }
 }
