@@ -1,6 +1,6 @@
 {
   "name": "json-rpc2.0-node",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/xujif/ts-json-rpc",
   "author": "i@xujif.com",
   "description": "A simple and extendable json-rpc-2.0 implementation, include server and client, written by typescript",
