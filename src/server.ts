@@ -2,14 +2,14 @@ import { JsonRpcMixedBody, JsonRpcNotify, JsonRpcRequest, JsonRpcResponse, Parse
 
 export class ServerProxy {
 
-    protected exceptionHandle?: (body: any, e: any) => void
+    protected exceptionHandle?: (body: any, e: any) => JsonRpcResponse | void
     protected instance: any
 
     constructor(instance: any) {
         this.instance = instance
     }
 
-    on (event: 'exception', handle: (body: any, e: any) => void): void {
+    on (event: 'exception', handle: (body: any, e: any) => JsonRpcResponse | void): void {
         this.exceptionHandle = handle
     }
 
@@ -57,13 +57,16 @@ export class ServerProxy {
                 }
             }
         } catch (e) {
-            if (!(e instanceof RemoteError) && this.exceptionHandle) {
+            // if payload is a notify ignore the error
+            if (payload.id) {
+                if (this.exceptionHandle) {
+                    return this.exceptionHandle(payload, e) || this.makeError(payload.id, e)
+                } else {
+                    return this.makeError(payload.id, e)
+                }
+            } else if (this.exceptionHandle) {
                 this.exceptionHandle(payload, e)
             }
-            if ((payload as JsonRpcRequest).id !== void 0) {
-                return this.makeError((payload as JsonRpcRequest).id, e)
-            }
-            // if payload is an notify ignore the error
         }
     }
 
@@ -86,7 +89,7 @@ export class ServerProxy {
         }
     }
 
-    protected makeError (id: null | number | string, e: any): JsonRpcResponse {
+    protected makeError (id: null | number | string | undefined, e: any): JsonRpcResponse {
         return {
             'id': id,
             'jsonrpc': "2.0",

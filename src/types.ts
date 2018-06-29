@@ -1,7 +1,7 @@
 
 
 export interface JsonRpcResponse {
-    id: null | number | string
+    id?: null | number | string
     jsonrpc: '2.0'
     result?: any
     error?: {
