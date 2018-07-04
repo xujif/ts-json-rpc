@@ -115,12 +115,20 @@ export class Client implements RpcClient {
     }
 
     as<T> (namespace?: string) {
-        return new Proxy({}, {
-            get: (target: any, method: string) => {
+        const proxyOjbect = {
+            inspect: false,
+            toJSON () { return {} },
+        } as any
+        return new Proxy(proxyOjbect, {
+            get: (target: any, prop: string | number | symbol) => {
+                if (typeof prop !== 'string') {
+                    return target[prop]
+                }
+                if (typeof target[prop] !== 'undefined') {
+                    return target[prop]
+                }
+                const method = namespace ? namespace + '.' + prop : prop
                 return (...args: any[]) => {
-                    if (namespace) {
-                        method = namespace + '.' + method
-                    }
                     return this.invoke(method, ...args)
                 }
             }
